@@ -1,14 +1,26 @@
+# Base image with Python
 FROM python:3.7-slim
 
-# Allow statements and log messages to immediately appear in the Knative logs
-ENV PYTHONUNBUFFERED True
+# Set working directory
+WORKDIR /app
 
-ENV APP_HOME /app
-WORKDIR $APP_HOME
-COPY . ./
+# Install system dependencies required for compiling Python packages
+RUN apt-get update && apt-get install -y \
+    build-essential \
+    gcc \
+    g++ \
+    libffi-dev \
+    libpq-dev \
+    && rm -rf /var/lib/apt/lists/*
 
-# Install the requirements
+# Copy the contents of your project
+COPY . .
+
+# Install Python dependencies
 RUN pip install --no-cache-dir -r requirements.txt
 
-CMD exec gunicorn --bind :$PORT --workers 1 --threads 8 --timeout 0 main:app
+# Expose the default port
+EXPOSE 5000
 
+# Command to run your app
+CMD exec gunicorn --bind :$PORT --workers 1 --threads 8 --timeout 0 main:app
